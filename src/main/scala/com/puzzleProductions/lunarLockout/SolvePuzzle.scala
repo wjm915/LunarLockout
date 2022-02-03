@@ -17,16 +17,21 @@ object SolvePuzzle {
     println()
   }
 
+  def showCurrentSet(set: mutable.Stack[Array[Array[Char]]]): Unit = {
+    println("\n *** CurrentSet: ")
+    set.reverse.map(x => showBoard(x))
+  }
+
   def findMoves(board: Array[Array[Char]]): mutable.Stack[(Int, Int, Char, Int, Int)] = {
     var ans = mutable.Stack[(Int, Int, Char, Int, Int)]()
 
     for (r <- board.indices) {
       for (c <- board.indices) {
         if (board(r)(c) != '_') {
-          ans = ans.concat(lookLeft(board, r, c))
-            .concat(lookRight(board, r, c))
-            .concat(lookUp(board, r, c))
-            .concat(lookDown(board, r, c))
+          ans = ans.concat(lookRight(board, r, c))
+            //.concat(lookRight(board, r, c))
+            //.concat(lookUp(board, r, c))
+            //.concat(lookDown(board, r, c))
           //println("Ans: " + ans.toString())
         }
       }
@@ -40,39 +45,29 @@ object SolvePuzzle {
     var c: Int = _col - 1
 
     //printf("  c: %d\n", c)
-    while (c >= 0) {
-      //printf("  LookingLeft: %d, %d\n", _row, c);
-      if (_board(_row)(c) != '_') {
-        //printf("   lookLeft: found: %c\n", _board(_row)(c))
-        if (abs(c - _col) > 1) {
-          ans.push((_row, _col, _board(_row)(_col), _row, c + 1))
-          //println("  Left: Found move: " + ans.toString())
-          return ans
-        }
-      }
-      c -= 1
-    }
+    while (c >= 0 && _board(_row)(c) == '_') c -=1
+
+    if(c < 0 || c == _col -1)
+      return ans
+    else
+      ans.push((_row, _col, _board(_row)(_col), _row, c + 1))
+
     ans
   }
 
   def lookRight(_board: Array[Array[Char]], _row: Int, _col: Int): mutable.Stack[(Int, Int, Char, Int, Int)] = {
-    //printf("Looking right: row, %d, col: %d\n", _row, _col)
+    printf("Looking right: row, %d, col: %d\n", _row, _col)
     val ans = mutable.Stack[(Int, Int, Char, Int, Int)]()
     var c: Int = _col + 1
 
-    //printf("  c: %d\n", c)
-    while (c < _board.length) {
-      //printf("  LookingRight: %d, %d\n", _row, c)
-      if (_board(_row)(c) != '_') {
-        //printf("   lookRight: found: %c\n", _board(_row)(c))
-        if (abs(c - _col) > 1) {
-          ans.push((_row, _col, _board(_row)(_col), _row, c - 1))
-          //println("  Found move: " + ans.toString())
-          return ans
-        }
-      }
-      c += 1
-    }
+    printf("  c: %d\n", c)
+    while (c < _board.length && _board(_row)(c) == '_') c +=1
+
+    if(c < 0 || c == _col + 1)
+      return ans
+    else
+      ans.push((_row, _col, _board(_row)(_col), _row, c - 1))
+
     ans
   }
 
@@ -118,9 +113,13 @@ object SolvePuzzle {
     ans
   }
 
+  def copyGameMap(_board: Array[Array[Char]]): Array[Array[Char]] = {
+    _board.map(_.map(x => x))
+  }
+
   def applyMove(src_r: Int, src_c: Int, src_id: Char, dst_r: Int, dst_c: Int, _board: Array[Array[Char]]): Array[Array[Char]] = {
-    var newBoard = _board.clone()
-    var temp_id = newBoard(dst_r)(dst_c)
+    val newBoard = copyGameMap(_board)
+    val temp_id = newBoard(dst_r)(dst_c)
     newBoard(dst_r)(dst_c) = newBoard(src_r)(src_c)
     newBoard(src_r)(src_c) = temp_id
     newBoard
@@ -133,33 +132,40 @@ object SolvePuzzle {
     false
   }
 
-  def solve(currentGameMap: Array[Array[Char]], currentSet: mutable.Stack[Array[Array[Char]]]): Boolean = {
-    println("gameMap: ")
-    showBoard(currentGameMap)
+  def solve(level: Int, currentGameMap: Array[Array[Char]], currentSet: mutable.Stack[Array[Array[Char]]]): Boolean = {
+    println("*** Solve(): " + level.toString)
 
     if (currentGameMap(2)(2) == 'X') {
       println("\n **** Solved ****")
+      showCurrentSet(currentSet);
       return true
     }
 
     val moves = findMoves(currentGameMap)
-    println("Moves: " + moves.toString())
+    println(level.toString + " 1. Moves: " + moves.toString() + " length: " + moves.length.toString)
 
     while(moves.length > 0) {
       // Get a move
-      var (src_r, src_c, src_id, dst_r, dst_c) = moves.pop()
+      val (src_r, src_c, src_id, dst_r, dst_c) = moves.pop()
+      println(level.toString + " 2. Moves: " + moves.toString() + " length: " + moves.length.toString)
+
       // Apply the move to the current game
+      showBoard(currentGameMap)
+      printf("Applied move: (%d,%d,%c,%d,%d)\n",src_r, src_c, src_id, dst_r, dst_c)
       var newGameMap = applyMove(src_r, src_c, src_id, dst_r, dst_c, currentGameMap)
-      // Show the modified game
       showBoard(newGameMap)
 
       // If a new game state has been generated, then make a recursive call to solve()
       if (!member(newGameMap, currentSet)) {
-        if (solve(newGameMap, currentSet.push(newGameMap))) return true
+        printf("1. CurrentSet: %d\n", currentSet.length)
+        if (solve(level+1, newGameMap, currentSet.push(copyGameMap(newGameMap)))) return true
         currentSet.pop()
+        showBoard(currentGameMap)
+        println("Back to Level: " + level.toString + " Moves: " + moves.toString() + " length: " + moves.length.toString)
+        printf("2. CurrentSet: %d\n", currentSet.length)
       }
     }
-
+    printf("** Level: %d return, No more moves!\n", level)
     false
   }
 
@@ -169,7 +175,11 @@ object SolvePuzzle {
       println("Solver!!")
       val gameMap: Array[Array[Char]] = GameBoard.tileMap.map(_.map(x => x.getId()))
       var setOfMaps = mutable.Stack[Array[Array[Char]]]()
-      solve(gameMap, setOfMaps.push(gameMap))
+      showBoard(gameMap)
+      //solve(1, gameMap, setOfMaps.push(gameMap))
+
+      val moves = findMoves(gameMap)
+      println("Moves: " + moves.toString() + " length: " + moves.length.toString)
     }
   }
 }
