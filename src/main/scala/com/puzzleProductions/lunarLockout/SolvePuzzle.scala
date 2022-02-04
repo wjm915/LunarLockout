@@ -117,7 +117,7 @@ object SolvePuzzle {
     _board.map(_.map(x => x))
   }
 
-  def applyMove(src_r: Int, src_c: Int, src_id: Char, dst_r: Int, dst_c: Int, _board: Array[Array[Char]]): Array[Array[Char]] = {
+  def applyMove(src_r: Int, src_c: Int, dst_r: Int, dst_c: Int, _board: Array[Array[Char]]): Array[Array[Char]] = {
     val newBoard = copyGameMap(_board)
     val temp_id = newBoard(dst_r)(dst_c)
     newBoard(dst_r)(dst_c) = newBoard(src_r)(src_c)
@@ -127,45 +127,47 @@ object SolvePuzzle {
 
   def member(_board: Array[Array[Char]], setOfBoards: mutable.Stack[Array[Array[Char]]]): Boolean = {
     for (i <- setOfBoards.indices) {
-      if (setOfBoards(i).sameElements(_board)) {
-        return true
+      var fred = setOfBoards(i)
+      var diffs: Int = 0;
+      for (r <- _board.indices) {
+        for (c <- _board.indices) {
+          if (_board(r)(c) != fred(r)(c)) diffs += 1
+        }
       }
+      if (diffs == 0) return true
     }
     false
   }
 
-  def solve(level: Int, currentGameMap: Array[Array[Char]], currentSet: mutable.Stack[Array[Array[Char]]]): Boolean = {
-    println("*** Solve()  Level: " + level.toString + " Set size: " + currentSet.length)
+  def solve(level: Int, currentBoard: Array[Array[Char]], currentSet: mutable.Stack[Array[Array[Char]]]):
+  (Boolean, mutable.Stack[Array[Array[Char]]]) = {
     if (level <= 0) {
-      return false
+      return (false, mutable.Stack[Array[Array[Char]]]())
     }
 
-    if (currentGameMap(2)(2) == 'X') {
-      println("\n\n **** Solved ****")
-      showCurrentSet(currentSet)
-      return true
+    if (currentBoard(2)(2) == 'X') {
+      return (true, currentSet)
     }
 
-    val moves = findMoves(currentGameMap)
+    val moves = findMoves(currentBoard)
 
     while(moves.nonEmpty) {
       // Get a move
-      val (src_r, src_c, src_id, dst_r, dst_c) = moves.pop()
+      val (src_r, src_c, _, dst_r, dst_c) = moves.pop()
 
       // Apply the move to the current game
-      val newGameMap = applyMove(src_r, src_c, src_id, dst_r, dst_c, currentGameMap)
+      val newBoard = applyMove(src_r, src_c, dst_r, dst_c, currentBoard)
 
-      // If a new game state has been generated, then make a recursive call to solve()
-      if (!member(newGameMap, currentSet)) {
-        if (solve(level-1, newGameMap, currentSet.push(newGameMap))) {
-          return true
+      // If a unique game state has been generated, then make a recursive call to solve()
+      if (!member(newBoard, currentSet)) {
+        val (tORf, solveCurrentSet) = solve(level - 1, newBoard, currentSet.push(newBoard))
+        if (tORf) {
+          return (tORf, solveCurrentSet)
         }
         currentSet.pop()
-      } else {
-        println("*********** MEMBER *********************")
       }
     }
-    false
+    (false, mutable.Stack[Array[Array[Char]]]())
   }
 
   def changeBoard(_board: Array[Array[Char]], r: Int, c: Int, id: Char): Array[Array[Char]] = {
@@ -180,7 +182,11 @@ object SolvePuzzle {
       println("Solver!!")
       val gameMap: Array[Array[Char]] = GameBoard.tileMap.map(_.map(x => x.getId()))
       val setOfMaps = mutable.Stack[Array[Array[Char]]]()
-      solve(25, gameMap, setOfMaps.push(gameMap))
+      var level:Int = 100
+      setOfMaps.clear()
+      val (status, currentSet) = solve(level, gameMap, setOfMaps.push(gameMap))
+      printf("Solved: %b, MaxLevel: %d, currentSet.length: %d\n", status, level, currentSet.length)
+      showCurrentSet(currentSet)
     }
   }
 }
