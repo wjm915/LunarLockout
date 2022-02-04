@@ -21,27 +21,6 @@ object SolvePuzzle {
     set.reverse.foreach(x => showBoard(x))
   }
 
-  def sort(_moves: mutable.Stack[(Int, Int, Char, Int, Int)]): mutable.Stack[(Int, Int, Char, Int, Int)] = {
-    var swaps: Int = 1
-    var i = 0
-    while (swaps > 0) {
-      swaps = 0
-      for (j <- 1 until _moves.length) {
-        i = j - 1
-        val (_, _, src_id1, _, _) = _moves(i)
-        val (_, _, src_id2, _, _) = _moves(j)
-
-        if(src_id1 != 'X' && src_id2 == 'X') {
-          val temp = _moves(i)
-          _moves(i) = _moves(j)
-          _moves(j) = temp
-          swaps += 1
-        }
-      }
-    }
-    _moves
-  }
-
   def findMoves(board: Array[Array[Char]]): mutable.Stack[(Int, Int, Char, Int, Int)] = {
     var ans = mutable.Stack[(Int, Int, Char, Int, Int)]()
 
@@ -55,7 +34,6 @@ object SolvePuzzle {
         }
       }
     }
-    //sort(ans)
     ans
   }
 
@@ -129,21 +107,25 @@ object SolvePuzzle {
     for (i <- setOfBoards.indices) {
       var fred = setOfBoards(i)
       var diffs: Int = 0;
-      for (r <- _board.indices) {
-        for (c <- _board.indices) {
-          if (_board(r)(c) != fred(r)(c)) diffs += 1
+      for (r <- 0 until _board.length) {
+        for (c <- 0 until _board.length) {
+          if (_board(r)(c) != fred(r)(c)) {
+            // This "short circuits the r & c loops (i.e. Makes it faster!)
+            var c = _board.length
+            var r = _board.length
+            diffs += 1
+          }
         }
       }
-      if (diffs == 0) return true
+      if (diffs == 0) {
+        return true
+      }
     }
     false
   }
 
-  def solve(level: Int, currentBoard: Array[Array[Char]], currentSet: mutable.Stack[Array[Array[Char]]]):
+  def solve(currentBoard: Array[Array[Char]], currentSet: mutable.Stack[Array[Array[Char]]]):
   (Boolean, mutable.Stack[Array[Array[Char]]]) = {
-    if (level <= 0) {
-      return (false, mutable.Stack[Array[Array[Char]]]())
-    }
 
     if (currentBoard(2)(2) == 'X') {
       return (true, currentSet)
@@ -160,7 +142,7 @@ object SolvePuzzle {
 
       // If a unique game state has been generated, then make a recursive call to solve()
       if (!member(newBoard, currentSet)) {
-        val (tORf, solveCurrentSet) = solve(level - 1, newBoard, currentSet.push(newBoard))
+        val (tORf, solveCurrentSet) = solve(newBoard, currentSet.push(newBoard))
         if (tORf) {
           return (tORf, solveCurrentSet)
         }
@@ -182,10 +164,8 @@ object SolvePuzzle {
       println("Solver!!")
       val gameMap: Array[Array[Char]] = GameBoard.tileMap.map(_.map(x => x.getId()))
       val setOfMaps = mutable.Stack[Array[Array[Char]]]()
-      var level:Int = 100
-      setOfMaps.clear()
-      val (status, currentSet) = solve(level, gameMap, setOfMaps.push(gameMap))
-      printf("Solved: %b, MaxLevel: %d, currentSet.length: %d\n", status, level, currentSet.length)
+      val (status, currentSet) = solve(gameMap, setOfMaps.push(gameMap))
+      printf("Solved: %b, currentSet.length: %d\n", status, currentSet.length)
       showCurrentSet(currentSet)
     }
   }
