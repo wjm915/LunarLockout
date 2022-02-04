@@ -1,7 +1,8 @@
 package com.puzzleProductions.lunarLockout
 
-
+import java.awt.Dimension
 import java.awt.event.{ActionEvent, ActionListener}
+import javax.swing.{JDialog, JTextField}
 import scala.collection.mutable
 
 object SolvePuzzle {
@@ -167,6 +168,15 @@ object SolvePuzzle {
       val (status, currentSet) = solve(gameMap, setOfMaps.push(gameMap))
       printf("Solved: %b, currentSet.length: %d\n", status, currentSet.length)
       showCurrentSet(currentSet)
+      if (currentSet.length > 1) {
+        MoveRobots.makeMoves(currentSet)
+      } else {
+        val fred = new JDialog()
+        fred.add(new JTextField("No solution found"))
+        fred.setMinimumSize(new Dimension(100,100))
+        fred.pack()
+        fred.setVisible(true)
+      }
     }
   }
 }

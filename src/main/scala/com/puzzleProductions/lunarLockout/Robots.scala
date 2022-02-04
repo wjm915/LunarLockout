@@ -1,7 +1,7 @@
 package com.puzzleProductions.lunarLockout
 
 import java.awt.event.{ActionEvent, ActionListener}
-import java.awt.{Color, Dimension, FlowLayout}
+import java.awt.{Color, Dimension, FlowLayout, Font}
 import javax.swing.{JButton, JPanel}
 
 object Robots extends JPanel {
@@ -51,15 +51,21 @@ object Robots extends JPanel {
   class RobotButton(_id: Char, _color: Color) extends TileTraits {
     private var id: Char = _id
 
+    this.setText(_id.toString)
+    this. setFont(new Font("Serif", Font.BOLD, 16))
     this.setBackground(_color)
     this.addActionListener(new RobotButtonListener(this))
     this.setPreferredSize(new Dimension(50,50))
 
     def setId(_id: Char): Unit = {
       this.id = _id
+      this.setText("")
+      if (this.id != '_') {
+        this.setText(_id.toString)
+      }
     }
 
-    def getId: Char = {
+    def getId(): Char = {
       this.id
     }
 

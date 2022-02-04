@@ -1,7 +1,7 @@
 package com.puzzleProductions.lunarLockout
 
 import java.awt.event.{ActionEvent, ActionListener}
-import java.awt.{Color, Dimension, GridLayout}
+import java.awt.{Color, Dimension, GridLayout, Font}
 import javax.swing.JPanel
 
 
@@ -16,11 +16,11 @@ object GameBoard extends JPanel {
     this.setPreferredSize(_dimension)
     this.setBackground (Color.green)
     this.setLayout(new GridLayout(5,5, gap, gap))
-    addTitles()
+    addTiles()
     this
   }
 
-  def addTitles(): Unit = {
+  def addTiles(): Unit = {
     for (r <- 0 until this.rows) {
       for (c <- 0 until this.cols) {
         tileMap(r)(c) = new Tile(r, c)
@@ -48,7 +48,6 @@ object GameBoard extends JPanel {
     }
   }
 
-
   //=========== Inner classes =============================
   class Tile(_row: Int, _col: Int) extends TileTraits {
     val row: Int = _row
@@ -63,16 +62,21 @@ object GameBoard extends JPanel {
 
     // Methods
     def setDefaults(): Unit = {
-      this.id = '_'
+      this.setId('_')
       this.color = if (row == col && col == 2) Color.white else Color.gray
       this.setBackground(color)
       this.setEnabled(false)
     }
 
     override def setId(_id:Char): Unit = {
-        this.id = _id
-        this.color = Id2ColorMap.getColor(_id)
-        this.setBackground(this.color)
+      this.id = _id
+      this. setFont(new Font("Serif", Font.BOLD, 16))
+      this.setText("")
+      if (this.id != '_') {
+        this.setText(_id.toString)
+      }
+      this.color = Id2ColorMap.getColor(_id)
+      this.setBackground(this.color)
     }
 
     override def getId(): Char = {
