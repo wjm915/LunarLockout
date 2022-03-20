@@ -1,8 +1,8 @@
 package com.puzzleProductions.lunarLockout
 
 import java.awt.event.{WindowEvent, WindowListener}
-import java.awt.{BorderLayout, Color, Dimension, FlowLayout, GridLayout}
-import javax.swing.{BoxLayout, JFrame, JPanel}
+import java.awt.{BorderLayout, Dimension}
+import javax.swing.JFrame
 
 object MainEntry extends JFrame {
 
@@ -16,13 +16,12 @@ object MainEntry extends JFrame {
     val boardHeight: Int = 500
     val totalHeight = buttonPanelHeight + boardHeight
 
-
     //========== GameBoard ==============
     val boardDimension =new Dimension(boardWidth,boardHeight)
-    val board = GameBoard(boardDimension);
+    val board = GameBoard(boardDimension)
 
     //========== Buttons ==============
-    val buttonPanel = Robots(new Dimension(buttonPanelWidth, buttonPanelHeight));
+    val buttonPanel = Robots(new Dimension(buttonPanelWidth, buttonPanelHeight))
 
     this.setSize(new Dimension(boardWidth, totalHeight))
     this.addWindowListener(new MainWindowListener)
@@ -30,7 +29,7 @@ object MainEntry extends JFrame {
 
     this.getContentPane.add(buttonPanel, BorderLayout.NORTH)
     this.getContentPane.add(board, BorderLayout.CENTER)
-    this.setVisible(true);
+    this.setVisible(true)
   }
 
   class MainWindowListener extends WindowListener {

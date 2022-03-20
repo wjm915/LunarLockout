@@ -126,14 +126,17 @@ object SolvePuzzle {
   }
 
   def solve(currentBoard: Array[Array[Char]], currentSet: mutable.Stack[Array[Array[Char]]]):
-  (Boolean, mutable.Stack[Array[Array[Char]]]) = {
+  Option[mutable.Stack[Array[Array[Char]]]] = {
 
+    // Check for a winning board state
     if (currentBoard(2)(2) == 'X') {
-      return (true, currentSet)
+      return Some(currentSet)
     }
 
+    // Generate all the valid moves given the current game board
     val moves = findMoves(currentBoard)
 
+    // Try each move
     while(moves.nonEmpty) {
       // Get a move
       val (src_r, src_c, _, dst_r, dst_c) = moves.pop()
@@ -143,14 +146,16 @@ object SolvePuzzle {
 
       // If a unique game state has been generated, then make a recursive call to solve()
       if (!member(newBoard, currentSet)) {
-        val (tORf, solveCurrentSet) = solve(newBoard, currentSet.push(newBoard))
-        if (tORf) {
-          return (tORf, solveCurrentSet)
+        val ans = solve(newBoard, currentSet.push(newBoard))
+        ans match {
+          case Some(solveCurrentSet) => return ans
+          case None => currentSet.pop()
         }
-        currentSet.pop()
       }
     }
-    (false, mutable.Stack[Array[Array[Char]]]())
+
+    //(false, mutable.Stack[Array[Array[Char]]]())
+    return None
   }
 
   def changeBoard(_board: Array[Array[Char]], r: Int, c: Int, id: Char): Array[Array[Char]] = {
@@ -165,17 +170,21 @@ object SolvePuzzle {
       println("Solver!!")
       val gameMap: Array[Array[Char]] = GameBoard.tileMap.map(_.map(x => x.getId()))
       val setOfMaps = mutable.Stack[Array[Array[Char]]]()
-      val (status, currentSet) = solve(gameMap, setOfMaps.push(gameMap))
-      printf("Solved: %b, currentSet.length: %d\n", status, currentSet.length)
-      showCurrentSet(currentSet)
-      if (currentSet.length > 1) {
-        MoveRobots.makeMoves(currentSet)
-      } else {
-        val fred = new JDialog()
-        fred.add(new JTextField("No solution found"))
-        fred.setMinimumSize(new Dimension(100,100))
-        fred.pack()
-        fred.setVisible(true)
+      solve(gameMap, setOfMaps.push(gameMap)) match {
+        case Some(currentSet) => {
+          printf("Solved: currentSet.length: %d\n", currentSet.length)
+          showCurrentSet(currentSet)
+          if (currentSet.length > 1) {
+            MoveRobots.makeMoves(currentSet)
+          }
+        }
+        case None => {
+          val fred = new JDialog()
+          fred.add(new JTextField("No solution found"))
+          fred.setMinimumSize(new Dimension(100, 100))
+          fred.pack()
+          fred.setVisible(true)
+        }
       }
     }
   }
