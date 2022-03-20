@@ -22,6 +22,5 @@ object Id2ColorMap extends Enumeration {
       case 'E' => Id2ColorMap.E
       case _ => Color.gray
     }
-
   }
 }

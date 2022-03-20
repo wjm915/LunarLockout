@@ -22,7 +22,8 @@ object SolvePuzzle {
     set.reverse.foreach(x => showBoard(x))
   }
 
-  def findMoves(board: Array[Array[Char]]): mutable.Stack[(Int, Int, Char, Int, Int)] = {
+  def findMoves(board: Array[Array[Char]]):
+  Option[mutable.Stack[(Int, Int, Char, Int, Int)]] = {
     var ans = mutable.Stack[(Int, Int, Char, Int, Int)]()
 
     for (r <- board.indices) {
@@ -35,7 +36,11 @@ object SolvePuzzle {
         }
       }
     }
-    ans
+
+    ans.length match {
+      case 0 => None
+      case _ => Some(ans)
+    }
   }
 
   def lookLeft(_board: Array[Array[Char]], _row: Int, _col: Int): mutable.Stack[(Int, Int, Char, Int, Int)] = {
@@ -89,6 +94,7 @@ object SolvePuzzle {
       return ans
     else
       ans.push((_row, _col, _board(_row)(_col), r-1 , _col))
+
     ans
   }
 
@@ -104,16 +110,16 @@ object SolvePuzzle {
     newBoard
   }
 
-  def member(_board: Array[Array[Char]], setOfBoards: mutable.Stack[Array[Array[Char]]]): Boolean = {
+  def member(board: Array[Array[Char]], setOfBoards: mutable.Stack[Array[Array[Char]]]): Boolean = {
     for (i <- setOfBoards.indices) {
       var fred = setOfBoards(i)
       var diffs: Int = 0;
-      for (r <- 0 until _board.length) {
-        for (c <- 0 until _board.length) {
-          if (_board(r)(c) != fred(r)(c)) {
+      for (r <- 0 until board.length) {
+        for (c <- 0 until board.length) {
+          if (board(r)(c) != fred(r)(c)) {
             // This "short circuits the r & c loops (i.e. Makes it faster!)
-            var c = _board.length
-            var r = _board.length
+            var c = board.length
+            var r = board.length
             diffs += 1
           }
         }
@@ -134,28 +140,26 @@ object SolvePuzzle {
     }
 
     // Generate all the valid moves given the current game board
-    val moves = findMoves(currentBoard)
+    findMoves(currentBoard) match {
+      case None => return None
+      case Some(moves) => while (moves.nonEmpty) {
+        // Get a move
+        val (src_r, src_c, _, dst_r, dst_c) = moves.pop()
 
-    // Try each move
-    while(moves.nonEmpty) {
-      // Get a move
-      val (src_r, src_c, _, dst_r, dst_c) = moves.pop()
+        // Apply the move to the current game
+        val newBoard = applyMove(src_r, src_c, dst_r, dst_c, currentBoard)
 
-      // Apply the move to the current game
-      val newBoard = applyMove(src_r, src_c, dst_r, dst_c, currentBoard)
-
-      // If a unique game state has been generated, then make a recursive call to solve()
-      if (!member(newBoard, currentSet)) {
-        val ans = solve(newBoard, currentSet.push(newBoard))
-        ans match {
-          case Some(solveCurrentSet) => return ans
-          case None => currentSet.pop()
+        // If a unique game state has been generated, then make a recursive call to solve()
+        if (!member(newBoard, currentSet)) {
+          val ans = solve(newBoard, currentSet.push(newBoard))
+          ans match {
+            case Some(solveCurrentSet) => return ans
+            case None => currentSet.pop()
+          }
         }
       }
     }
-
-    //(false, mutable.Stack[Array[Array[Char]]]())
-    return None
+    None
   }
 
   def changeBoard(_board: Array[Array[Char]], r: Int, c: Int, id: Char): Array[Array[Char]] = {

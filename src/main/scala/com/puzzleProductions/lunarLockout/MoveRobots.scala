@@ -1,4 +1,5 @@
 package com.puzzleProductions.lunarLockout
+import java.awt.Color
 import scala.collection.mutable
 object MoveRobots {
   val tileStack: mutable.Stack[(Int,Int,Char)] = mutable.Stack()
@@ -66,5 +67,8 @@ object MoveRobots {
         }
       }
     }
+    // This is a 'patch'!
+    if (GameBoard.tileMap(2)(2).getId() == '_')
+      GameBoard.tileMap(2)(2).setBackground(Color.white)
   }
 }
